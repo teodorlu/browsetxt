@@ -1,6 +1,7 @@
 (ns teodorlu.browsetxt
   (:require
    [babashka.process :as process]
+   [babashka.cli :as cli]
    [clojure.edn :as edn]
    [clojure.string :as str]
    [cheshire.core :as json]
@@ -23,6 +24,11 @@
 
 (defn less [s]
   (process/shell {:in s} "less"))
+
+(defn bat-markdown
+  "bat-markdown ~ batman"
+  [s]
+  (process/shell {:in s} "bat" "--paging" "always" "--file-name" "browsetxt.md"))
 
 (defn edn-parse-orelse [s orelse]
   (try (edn/read-string s)
@@ -71,10 +77,11 @@
 
   )
 
-(defn url-walk [startpage]
-  (let [show (fn [loc]
+(defn url-walk [startpage opts]
+  (let [pager (if (:bat-markdown opts) bat-markdown less)
+        show (fn [loc]
                ;; (prn [:showing loc])
-               (-> loc :url pandoc-url->md less))
+               (-> loc :url pandoc-url->md pager))
         next-loc (fn [loc]
                    (concat [:quit]
                            (for [target (url->links (:url loc))]
@@ -85,4 +92,4 @@
                               (fn quit? [loc] (= :quit loc)))))
 
 (defn -main [url & args]
-  (url-walk url))
+  (url-walk url (cli/parse-opts args)))
