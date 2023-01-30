@@ -78,13 +78,13 @@
 
  (url->links "https://play.teod.eu"))
 
-(defn url-walk [url]
+(defn url-walk [startpage]
   (let [show (comp less pandoc-url->md :url)   ; Is it a bad sign that I'm refactoring towards point-free Clojure?
         next-loc (fn [loc]
                    (concat [:quit]
                            (for [target (url->links (:url loc))]
                              {:url target})))]
-    (walk-show-loop-with-exit {:url url}
+    (walk-show-loop-with-exit {:url startpage}
                               show
                               next-loc
                               (fn quit? [loc] (= :quit loc)))))
