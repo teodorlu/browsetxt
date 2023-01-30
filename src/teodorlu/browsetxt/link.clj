@@ -44,7 +44,8 @@
     (str/starts-with? link "/") (str (protocol root) (host root) link)
 
     ;; we don't support other links (yet)!
-    ;; (consider using a library for this)
+    ;;
+    ;; Using a library would fix this. At the same time, I like incrementally adding link cases.
     :else nil
     ))
 
