@@ -26,3 +26,12 @@ In a terminal, run
 For example:
 
     browsetxt https://en.wikipedia.org/wiki/Krakatoa
+
+## Markdown syntax highlighting
+
+It's possible to get colors in your document rendering by relying on [bat][bat].
+Install `bat`, then use the `--bat-mardown` CLI argument:
+
+    browsetxt https://en.wikipedia.org/wiki/Krakatoa --bat-markdown
+
+[bat]: https://github.com/sharkdp/bat
