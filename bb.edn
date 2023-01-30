@@ -1,0 +1,2 @@
+{:deps {io.github.teodorlu/browsetxt {:local/root "."}}
+ :bbin/bin {browsetxt {:main-opts ["-m" "teodorlu.browsetxt/-main"]}}}
