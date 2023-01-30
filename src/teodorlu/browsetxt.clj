@@ -83,7 +83,7 @@
                ;; (prn [:showing loc])
                (-> loc :url pandoc-url->md pager))
         next-loc (fn [loc]
-                   (concat [:quit]
+                   (concat [:quit {:url loc}]
                            (for [target (url->links (:url loc))]
                              {:url target})))]
     (walk-show-loop-with-exit {:url startpage}
