@@ -58,7 +58,7 @@
                     x)
                   (-> url pandoc-url->data :blocks))
     (->> @link-nodes
-         (map #(link/resolve url (get-in % [:c 2 0])))
+         (map #(link/resolve2 url (get-in % [:c 2 0])))
          (remove nil?))))
 
 (comment
