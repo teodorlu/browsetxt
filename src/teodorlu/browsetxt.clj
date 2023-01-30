@@ -42,10 +42,10 @@
       (recur next-loc))))
 
 (defn walk-show-loop-with-exit
-  [start show next-loc exit?]
+  [start show next-loc quit?]
   (loop [loc start]
     (when-let [next-loc (fzf-edn (next-loc loc) nil)]
-      (when-not (exit? next-loc)
+      (when-not (quit? next-loc)
         (show loc)
         (recur next-loc)))))
 
@@ -53,14 +53,14 @@
   (walk-show-loop-with-exit :smalgangen
                             (comp less pr-str)
                             (fn next-loc [loc]
-                              (concat [:exit]
+                              (concat [:quit]
                                       (get
                                        {:smalgangen #{:g17 :ibv}
                                         :g17 #{:smalgangen}
                                         :ibv #{:smalgangen}}
                                        loc
                                        #{})))
-                            (fn exit? [loc] (= :exit loc)))
+                            (fn quit? [loc] (= :quit loc)))
 
   (comment
     (walk-show-loop :smalgangen
@@ -76,5 +76,4 @@
                {:smalgangen #{:g17 :ibv}
                 :g17 #{:smalgangen}
                 :ibv #{:smalgangen}}))
-  ;; (prn (fzf-edn [:norway :sweden ["lollololo"]] ::no-match))
   )
