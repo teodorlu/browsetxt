@@ -48,7 +48,9 @@
         (recur next-loc)))))
 
 (defn pandoc-url->md [url]
-  (:out (process/shell {:out :string} "pandoc" "-t" "markdown" url)))
+  (let [cmd ["pandoc" "--reference-links" url "-t" "markdown"]]
+    ;; (prn cmd)
+    (:out (apply process/shell {:out :string} cmd))))
 
 (defn pandoc-url->data [url]
   (let [process-result (process/shell {:out :string} "pandoc" "-t" "json" url)]
