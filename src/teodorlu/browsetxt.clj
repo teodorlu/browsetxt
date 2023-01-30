@@ -32,18 +32,6 @@
   (let [next (fzf (map pr-str choices))]
     (edn-parse-orelse next default)))
 
-(defn walk-loop [start goto]
-  (loop [start start]
-    (when-let [next-loc (fzf-edn (goto start) nil)]
-      (recur next-loc))))
-
-(defn walk-show-loop
-  [start show next-loc]
-  (loop [loc start]
-    (when-let [next-loc (fzf-edn (next-loc loc) nil)]
-      (show loc)
-      (recur next-loc))))
-
 (defn walk-show-loop-with-exit
   [start show next-loc quit?]
   (loop [loc start]
@@ -74,10 +62,14 @@
          (remove nil?))))
 
 (comment
- (let [link {:t "Link", :c [["" [] []] [{:t "Str", :c "Aphorisms"}] ["./aphorisms/" ""]]}]
-   (get-in link [:c 2 0]))
+  (let [link {:t "Link", :c [["" [] []] [{:t "Str", :c "Aphorisms"}] ["./aphorisms/" ""]]}]
+    (get-in link [:c 2 0]))
 
- (url->links "https://play.teod.eu"))
+  (def !teodor-data (atom  (pandoc-url->data "https://play.teod.eu")))
+
+  (get (:blocks @!teodor-data) 6)
+
+  )
 
 (defn url-walk [startpage]
   (let [show (fn [loc]
@@ -92,33 +84,5 @@
                               next-loc
                               (fn quit? [loc] (= :quit loc)))))
 
-(defn -main [& args]
-  (url-walk "https://play.teod.eu")
-
-  (comment
-    (walk-show-loop-with-exit :smalgangen
-                              (comp less pr-str)
-                              (fn next-loc [loc]
-                                (concat [:quit]
-                                        (get
-                                         {:smalgangen #{:g17 :ibv}
-                                          :g17 #{:smalgangen}
-                                          :ibv #{:smalgangen}}
-                                         loc
-                                         #{})))
-                              (fn quit? [loc] (= :quit loc)))
-
-    (walk-show-loop :smalgangen
-                    (comp less pr-str)
-                    {:smalgangen #{:g17 :ibv}
-                     :g17 #{:smalgangen}
-                     :ibv #{:smalgangen}})
-    (do
-      (less (str/join "\n" (range 100)))
-      nil)
-
-    (walk-loop :smalgangen
-               {:smalgangen #{:g17 :ibv}
-                :g17 #{:smalgangen}
-                :ibv #{:smalgangen}}))
-  )
+(defn -main [url & args]
+  (url-walk url))
