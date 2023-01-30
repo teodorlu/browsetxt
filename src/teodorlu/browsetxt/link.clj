@@ -67,6 +67,28 @@
           )))))
 
 (comment
+  (let [p (java.net.URI. "http://example.com/foo/bar/42?param=true")]
+    (.getPath p))
+  ;; => "/foo/bar/42"
+
+  (let [p (java.net.URI. "http://example.com/foo/bar/42/../43?param=true")]
+    (.getPath p))
+  ;; => "/foo/bar/42/../43"
+
+  (let [p (java.net.URI. "http://example.com/foo/bar/42/../43?param=true")]
+    (.getPath (.normalize p)))
+  ;; => "/foo/bar/43"
+
+
+
+  ;; https://docs.oracle.com/javase/7/docs/api/java/net/URI.html
+  ;;
+  ;; ooog ... jeg blir glad i java jeg :)
+  ;;
+
+  )
+
+(comment
   (subs "./somepath" 2)
   ;; => "somepath"
   (subs "../somepath" 3)
@@ -103,6 +125,27 @@
              (resolve "https://teod.eu" "https://play.sindre.me")
              (resolve "https://teod.eu/aphorisms/" "./..")
              ]]
+    [ex (eval ex)]))
+
+(defn resolve2
+  "Cheat (use java)"
+  [root link]
+  (str (.normalize (.resolve (.normalize (java.net.URI. (str root "/")))
+                             link))))
+
+(comment
+
+  (for [ex '[(resolve2 "https://teod.eu" "./aphorisms/")
+             (resolve2 "https://teod.eu" "https://teod.eu/aphorisms/")
+             (resolve2 "https://teod.eu/aphorisms/" "..")
+             (resolve2 "https://teod.eu" "https://play.sindre.me")
+             (resolve2 "https://teod.eu/aphorisms/" "./..")
+             ]]
     [ex (eval ex)])
+  ;; => ([(resolve2 "https://teod.eu" "./aphorisms/") "https://teod.eu/aphorisms/"]
+  ;;     [(resolve2 "https://teod.eu" "https://teod.eu/aphorisms/") "https://teod.eu/aphorisms/"]
+  ;;     [(resolve2 "https://teod.eu/aphorisms/" "..") "https://teod.eu/"]
+  ;;     [(resolve2 "https://teod.eu" "https://play.sindre.me") "https://play.sindre.me"]
+  ;;     [(resolve2 "https://teod.eu/aphorisms/" "./..") "https://teod.eu/"])
 
   )
