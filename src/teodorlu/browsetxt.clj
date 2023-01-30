@@ -2,7 +2,11 @@
   (:require
    [babashka.process :as process]
    [clojure.edn :as edn]
-   [clojure.string :as str]))
+   [clojure.string :as str]
+   [cheshire.core :as json]
+   [clojure.walk]
+   [teodorlu.browsetxt.link :as link]
+   [clojure.walk :as walk]))
 
 (defn fzf
   "Choose a thing with fzf
@@ -49,20 +53,59 @@
         (show loc)
         (recur next-loc)))))
 
+(defn pandoc-url->md [url]
+  (:out (process/shell {:out :string} "pandoc" "-t" "markdown" url)))
+
+(defn pandoc-url->data [url]
+  (let [process-result (process/shell {:out :string} "pandoc" "-t" "json" url)]
+    (when (= 0 (:exit process-result))
+      (json/parse-string (:out process-result) keyword))))
+
+(defn url->links
+  "Extract a sequence of liks from an url"
+  [url]
+  (let [link-nodes (atom [])]
+    (walk/prewalk (fn [x] (when (= "Link" (:t x))
+                            (swap! link-nodes conj x))
+                    x)
+                  (-> url pandoc-url->data :blocks))
+    (->> @link-nodes
+         (map #(link/resolve url (get-in % [:c 2 0])))
+         (remove nil?))))
+
+(comment
+ (let [link {:t "Link", :c [["" [] []] [{:t "Str", :c "Aphorisms"}] ["./aphorisms/" ""]]}]
+   (get-in link [:c 2 0]))
+
+ (url->links "https://play.teod.eu"))
+
+(defn url-walk [url]
+  (let [show (comp less pandoc-url->md :url)   ; Is it a bad sign that I'm refactoring towards point-free Clojure?
+        next-loc (fn [loc]
+                   (concat [:quit]
+                           (for [target (url->links (:url loc))]
+                             {:url target})))]
+    (walk-show-loop-with-exit {:url url}
+                              show
+                              next-loc
+                              (fn quit? [loc] (= :quit loc)))))
+
 (defn -main [& args]
-  (walk-show-loop-with-exit :smalgangen
-                            (comp less pr-str)
-                            (fn next-loc [loc]
-                              (concat [:quit]
-                                      (get
-                                       {:smalgangen #{:g17 :ibv}
-                                        :g17 #{:smalgangen}
-                                        :ibv #{:smalgangen}}
-                                       loc
-                                       #{})))
-                            (fn quit? [loc] (= :quit loc)))
+  (url-walk "https://play.teod.eu")
 
   (comment
+    (walk-show-loop-with-exit :smalgangen
+                              (comp less pr-str)
+                              (fn next-loc [loc]
+                                (concat [:quit]
+                                        (get
+                                         {:smalgangen #{:g17 :ibv}
+                                          :g17 #{:smalgangen}
+                                          :ibv #{:smalgangen}}
+                                         loc
+                                         #{})))
+                              (fn quit? [loc] (= :quit loc)))
+
     (walk-show-loop :smalgangen
                     (comp less pr-str)
                     {:smalgangen #{:g17 :ibv}

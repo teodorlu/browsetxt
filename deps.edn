@@ -1,3 +1,4 @@
 {:deps {babashka/fs {:mvn/version "0.2.15"}
-        babashka/process {:mvn/version "0.4.16"}}
+        babashka/process {:mvn/version "0.4.16"}
+        cheshire/cheshire {:mvn/version "5.11.0"}}
  :aliases {}}
