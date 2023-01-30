@@ -4,7 +4,6 @@
    [clojure.edn :as edn]
    [clojure.string :as str]
    [cheshire.core :as json]
-   [clojure.walk]
    [teodorlu.browsetxt.link :as link]
    [clojure.walk :as walk]))
 
