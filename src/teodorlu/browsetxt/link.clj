@@ -27,6 +27,54 @@
   ;; => "play.teod.eu"
   )
 
+(defn path-remove-dot-segments
+  "Implementation of the RFC 3986 remove_dot_segments algorithm
+
+  See: https://www.rfc-editor.org/rfc/rfc3986#section-5.2.4"
+  [path]
+  (let [[_ protocol host _ _] (re-matches #"([a-z]+://)([^/]+)([^#]+)(.*)" path)]
+    (if (or protocol host)
+      nil ; someone is trying to remove dot segments from something that is not a path.
+          ; No good!
+      (loop [in-buffer path
+             out-buffer ""]
+        (if (str/blank? in-buffer)
+          out-buffer ; return
+          ;; otherwise, ...
+          (cond
+            ;; 2A
+            (str/starts-with? in-buffer "./")
+            (recur (subs in-buffer 2)
+                   out-buffer)
+            (str/starts-with? in-buffer "../")
+            (recur (subs in-buffer 3)
+                   out-buffer)
+
+            ;; 2B
+            (str/starts-with? in-buffer "/./")
+            (recur (subs in-buffer 3)
+                   out-buffer)
+            ;; I don't understand this part:
+            ;;
+            ;; > "/.", where "." is a complete path segment
+
+            ;; 2C
+
+            ;; bah, this is boring. What did I expect! It's just following some
+            ;; really detailed instructions. I want to DESIGN! Not play
+            ;; codemonkey.
+            )
+          )))))
+
+(comment
+  (subs "./somepath" 2)
+  ;; => "somepath"
+  (subs "../somepath" 3)
+  ;; => "somepath"
+
+
+  )
+
 (defn resolve [root link]
   (cond
     ;; absolute links don't need resolving
@@ -34,8 +82,7 @@
     (str/starts-with? link "https://") link
 
     ;; .. and ./.. links up
-    (= link "..") (dir (ensure-zero-trailing-slashes root))
-    (= link "./..") (dir (ensure-zero-trailing-slashes root))
+    (#{".." "./.." "../"} link) (dir (ensure-zero-trailing-slashes root))
 
     ;; in a relative link, replace ./ with the root dir
     (str/starts-with? link "./") (str/replace link #"^\./" (ensure-single-trailing-slash root))
