@@ -35,7 +35,7 @@
 (defn walk-show-loop-with-exit
   [start show next-loc quit?]
   (loop [loc start]
-    (prn [:on loc])
+    ;; (prn [:on loc])
     (show loc)
     (when-let [next-loc (fzf-edn (next-loc loc) nil)]
       (when-not (quit? next-loc)
@@ -73,7 +73,7 @@
 
 (defn url-walk [startpage]
   (let [show (fn [loc]
-               (prn [:showing loc])
+               ;; (prn [:showing loc])
                (-> loc :url pandoc-url->md less))
         next-loc (fn [loc]
                    (concat [:quit]
