@@ -85,8 +85,7 @@
                   (-> url pandoc-url->data :blocks))
     (->> @link-nodes
          (map (fn [link]
-                {:url (resolve-link url (get-in link [:c 2 0]))
-                 :title (pandoc-inline->plain (get-in link [:c 1]))}))
+                {:url (resolve-link url (get-in link [:c 2 0]))}))
          (remove (comp nil? :url)))))
 
 (comment
