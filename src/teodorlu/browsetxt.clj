@@ -59,7 +59,7 @@
     (when (= 0 (:exit process-result))
       (json/parse-string (:out process-result) keyword))))
 
-(defn url->links
+(defn page->links
   "Extract a sequence of liks from an url"
   [url]
   (let [link-nodes (atom [])
@@ -96,7 +96,7 @@
                      (-> loc :url pandoc-url->md pager)))
         next-loc (fn [loc]
                    (concat [:quit loc]
-                           (for [target (url->links (:url loc))]
+                           (for [target (page->links (:url loc))]
                              (let [{:keys [url]} target]
                                {:url url}))))]
     (walk-show-loop-with-exit {:url startpage}
