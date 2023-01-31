@@ -59,6 +59,19 @@
     (when (= 0 (:exit process-result))
       (json/parse-string (:out process-result) keyword))))
 
+(defn pandoc-inline->plain [inline]
+  (when (vector? inline)
+    (let [data {:pandoc-api-version [1 22 2 1], :meta {}, :blocks [{:t "Para" :c  inline}]}
+          pandoc-result (process/shell {:out :string :in (json/generate-string data)}
+                                       "pandoc" "-f" "json" "-t" "plain")]
+      (when (= 0 (:exit pandoc-result))
+        (str/trim (:out pandoc-result))))))
+
+(comment
+  (pandoc-inline->plain [{:t "Str" :c "tihi"}])
+
+  )
+
 (defn page->links
   "Extract a sequence of liks from an url"
   [url]
@@ -72,37 +85,38 @@
                   (-> url pandoc-url->data :blocks))
     (->> @link-nodes
          (map (fn [link]
-                {:url (resolve-link url (get-in link [:c 2 0]))}))
+                {:url (resolve-link url (get-in link [:c 2 0]))
+                 :title (pandoc-inline->plain (get-in link [:c 1]))}))
          (remove (comp nil? :url)))))
 
 (comment
   (let [link {:t "Link", :c [["" [] []] [{:t "Str", :c "Aphorisms"}] ["./aphorisms/" ""]]}]
     (get-in link [:c 2 0]))
 
-  (def !teodor-data (atom  (pandoc-url->data "https://play.teod.eu")))
-
-  (get (:blocks @!teodor-data) 6)
+  (let [link {:t "Link", :c [["" [] []] [{:t "Str", :c "Aphorisms"}] ["./aphorisms/" ""]]}
+        linktext (get-in link [:c 1])]
+    (pandoc-inline->plain linktext))
 
   )
 
 (defn url-walk [startpage opts]
-  (let [pager (cond (:bat-markdown opts) bat-markdown
-                    :else less)
-        show (fn [loc]
-               (cond (:plain opts)
-                     (-> loc :url pandoc-url->plain pager)
+    (let [pager (cond (:bat-markdown opts) bat-markdown
+                      :else less)
+          show (fn [loc]
+                 (cond (:plain opts)
+                       (-> loc :url pandoc-url->plain pager)
 
-                     :else
-                     (-> loc :url pandoc-url->md pager)))
-        next-loc (fn [loc]
-                   (concat [:quit loc]
-                           (for [target (page->links (:url loc))]
-                             (let [{:keys [url]} target]
-                               {:url url}))))]
-    (walk-show-loop-with-exit {:url startpage}
-                              show
-                              next-loc
-                              (fn quit? [loc] (= :quit loc)))))
+                       :else
+                       (-> loc :url pandoc-url->md pager)))
+          next-loc (fn [loc]
+                     (concat [:quit loc]
+                             (for [target (page->links (:url loc))]
+                               (let [{:keys [url title]} target]
+                                 {:url url :title title}))))]
+      (walk-show-loop-with-exit {:url startpage}
+                                show
+                                next-loc
+                                (fn quit? [loc] (= :quit loc)))))
 
 (defn -main [url & args]
   (url-walk url (cli/parse-opts args)))
