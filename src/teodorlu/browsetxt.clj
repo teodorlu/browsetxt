@@ -71,8 +71,9 @@
                     x)
                   (-> url pandoc-url->data :blocks))
     (->> @link-nodes
-         (map #(resolve-link url (get-in % [:c 2 0])))
-         (remove nil?))))
+         (map (fn [link]
+                {:url (resolve-link url (get-in link [:c 2 0]))}))
+         (remove (comp nil? :url)))))
 
 (comment
   (let [link {:t "Link", :c [["" [] []] [{:t "Str", :c "Aphorisms"}] ["./aphorisms/" ""]]}]
@@ -96,7 +97,8 @@
         next-loc (fn [loc]
                    (concat [:quit loc]
                            (for [target (url->links (:url loc))]
-                             {:url target})))]
+                             (let [{:keys [url]} target]
+                               {:url url}))))]
     (walk-show-loop-with-exit {:url startpage}
                               show
                               next-loc
