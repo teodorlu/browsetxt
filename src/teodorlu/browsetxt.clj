@@ -48,7 +48,10 @@
 
 (defn pandoc-url->md [url]
   (let [cmd ["pandoc" "--reference-links" url "-t" "markdown"]]
-    ;; (prn cmd)
+    (:out (apply process/shell {:out :string} cmd))))
+
+(defn pandoc-url->plain [url]
+  (let [cmd ["pandoc" url "-t" "plain"]]
     (:out (apply process/shell {:out :string} cmd))))
 
 (defn pandoc-url->data [url]
@@ -82,10 +85,14 @@
   )
 
 (defn url-walk [startpage opts]
-  (let [pager (if (:bat-markdown opts) bat-markdown less)
+  (let [pager (cond (:bat-markdown opts) bat-markdown
+                    :else less)
         show (fn [loc]
-               ;; (prn [:showing loc])
-               (-> loc :url pandoc-url->md pager))
+               (cond (:plain opts)
+                     (-> loc :url pandoc-url->plain pager)
+
+                     :else
+                     (-> loc :url pandoc-url->md pager)))
         next-loc (fn [loc]
                    (concat [:quit loc]
                            (for [target (url->links (:url loc))]
