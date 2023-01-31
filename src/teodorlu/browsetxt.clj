@@ -5,7 +5,6 @@
    [clojure.edn :as edn]
    [clojure.string :as str]
    [cheshire.core :as json]
-   [teodorlu.browsetxt.link :as link]
    [clojure.walk :as walk]))
 
 (defn fzf
@@ -60,13 +59,16 @@
 (defn url->links
   "Extract a sequence of liks from an url"
   [url]
-  (let [link-nodes (atom [])]
+  (let [link-nodes (atom [])
+        resolve-link (fn [origin target]
+                       (str (.normalize (.resolve (.normalize (java.net.URI. (str origin "/")))
+                                                  target))))]
     (walk/prewalk (fn [x] (when (= "Link" (:t x))
                             (swap! link-nodes conj x))
                     x)
                   (-> url pandoc-url->data :blocks))
     (->> @link-nodes
-         (map #(link/resolve2 url (get-in % [:c 2 0])))
+         (map #(resolve-link url (get-in % [:c 2 0])))
          (remove nil?))))
 
 (comment
