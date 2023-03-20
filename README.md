@@ -1,3 +1,9 @@
+# browsetxt has MOVED!
+
+New home here: https://github.com/teodorlu/shed/tree/b2c402b8afa4fdaf422a88b4d5170fda2d469479/contrib/browsetxt/README.md
+
+---
+
 # browsetxt
 
 Hypertext as plaintext.
